@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Porównaj pełne koszty brutto G13 i G11 Taurona według udziału zużycia w trzech strefach. Kalkulator ze stawkami na 2026 rok.">
+<title>Kalkulator Tauron G13 vs G11</title>
+<style>
+:root{color-scheme:light;--background:#fff;--foreground:#162b38;--border:#d9e2e7;--viz-series-1:#087f70;--viz-series-2:#cf6540;--muted:#546674;--surface:#f1f6f7}
+@media(prefers-color-scheme:dark){:root{color-scheme:dark;--background:#142029;--foreground:#edf3f6;--border:#3c4e58;--viz-series-1:#58d2b7;--viz-series-2:#ffad80;--muted:#b2c2ca;--surface:#20313b}}
+*{box-sizing:border-box}body{margin:0;background:var(--background);color:var(--foreground);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}main{max-width:820px;margin:auto;padding:24px 20px 48px}h1{font-size:clamp(25px,5vw,38px);line-height:1.2;letter-spacing:-.03em;margin:0 0 16px}h3{font-size:22px;margin:24px 0 6px}p{margin:12px 0}.intro,.text-small{color:var(--muted)}.text-small{font-size:13px}.viz-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin:20px 0}.form-label{display:block;font-size:14px;font-weight:500;min-width:0}.form-range{width:100%;min-height:36px;accent-color:var(--viz-series-1)}.form-control,.form-select{display:block;width:100%;margin-top:7px;padding:10px;border:1px solid var(--border);border-radius:8px;color:var(--foreground);background:var(--background);font:inherit;font-size:16px}.table{width:100%;border-collapse:collapse;font-size:14px;margin:16px 0}.table th,.table td{padding:10px 6px;border-bottom:1px solid var(--border);text-align:left;overflow-wrap:anywhere}.table th{font-weight:600}.table .text-end{text-align:right}.tabular-nums{font-variant-numeric:tabular-nums}summary{padding:12px 0;cursor:pointer;font-weight:600}#result{padding:16px;background:var(--surface);border-radius:10px;font-weight:600}a{color:inherit;text-decoration:underline;text-underline-offset:3px}footer{margin-top:28px;padding-top:16px;border-top:1px solid var(--border);font-size:13px;color:var(--muted)}:focus-visible{outline:3px solid var(--viz-series-1);outline-offset:3px}@media(max-width:420px){main{padding:18px 12px}.table{font-size:12px}.table th,.table td{padding:8px 3px}.viz-controls{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>Kiedy G13 jest tańsza niż G11?</h1>
+<p class="intro">Ustaw udział zużycia w trzech strefach. Suwaki zawsze sumują się do 100% — zmiana jednego proporcjonalnie dopasowuje pozostałe. Możesz też wybrać punkt na wykresie.</p>
+<p class="intro">To procenty zużytych kWh, nie godzin. Najlepiej użyć udziałów z całego roku, z uwzględnieniem weekendów i sezonów. Wynik obejmuje VAT, akcyzę i dystrybucję.</p>
+<noscript>Włącz JavaScript, aby korzystać z kalkulatora.</noscript>
+<div id="tauron-compare">
+<h3>G13 czy G11 — granica opłacalności</h3>
+<div class="text-small">TAURON Sprzedaż · taryfa standardowa · stawki od 1.02 do 31.12.2026 · brutto</div>
+<svg id="tariff-plot" role="img" aria-label="Mapa udziałów zużycia: oś pozioma strefa I, pionowa strefa II. Strefa III to dopełnienie do 100 procent. Obszar poniżej linii oznacza tańszą G13."></svg>
+<div class="viz-controls">
+<label class="form-label">I · przedpołudnie: <output id="v0">20%</output><input class="form-range" id="s0" type="range" min="0" max="100" step="1" value="20"></label>
+<label class="form-label">II · popołudnie: <output id="v1">20%</output><input class="form-range" id="s1" type="range" min="0" max="100" step="1" value="20"></label>
+<label class="form-label">III · tania: <output id="v2">60%</output><input class="form-range" id="s2" type="range" min="0" max="100" step="1" value="60"></label>
+</div>
+<div id="result" aria-live="polite" class="tabular-nums"></div>
+<div class="viz-controls">
+<label class="form-label">Zużycie roczne (kWh)<input class="form-control" id="energy" type="number" min="1" step="100" value="3000"></label>
+<label class="form-label">Instalacja<select class="form-select" id="phase"><option value="9.08">1 faza</option><option value="13.36" selected>3 fazy</option></select></label>
+<label class="form-label">Cykl rozliczeń<select class="form-select" id="cycle"><option value="5.61">1 miesiąc</option><option value="2.80">2 miesiące</option><option value="0.93">6 miesięcy</option><option value="0.47">12 miesięcy</option></select></label>
+</div>
+<table class="table table-sm tabular-nums"><thead><tr><th>Pełny rachunek brutto</th><th class="text-end">G11</th><th class="text-end">G13</th></tr></thead><tbody><tr><td>Rocznie, według tych stawek</td><td id="bill11" class="text-end"></td><td id="bill13" class="text-end"></td></tr><tr><td>Średnio miesięcznie</td><td id="month11" class="text-end"></td><td id="month13" class="text-end"></td></tr><tr><td>W tym opłaty stałe / miesiąc</td><td id="fixed11" class="text-end"></td><td id="fixed13" class="text-end"></td></tr></tbody></table>
+<details><summary>Stawki, składniki rachunku i godziny stref</summary>
+<table class="table table-sm tabular-nums"><thead><tr><th>zł/kWh brutto</th><th>Energia</th><th>Sieciowa zmienna</th><th>Razem*</th></tr></thead><tbody><tr><td>G11</td><td>0,6175</td><td>0,3031</td><td>0,9741</td></tr><tr><td>G13 · I</td><td>0,5803</td><td>0,2710</td><td>0,9048</td></tr><tr><td>G13 · II</td><td>0,9631</td><td>0,4795</td><td>1,4961</td></tr><tr><td>G13 · III</td><td>0,5240</td><td>0,0482</td><td>0,6257</td></tr></tbody></table>
+<div class="text-small">* Z opłatami: jakościowa 0,0408 + OZE 0,0090 + kogeneracyjna 0,0037 zł/kWh. Energia zawiera akcyzę i VAT. Sumy zaokrąglonych stawek; faktura może różnić się o grosze.</div>
+<table class="table table-sm"><thead><tr><th>G13 · dni robocze</th><th>Lato: IV–IX</th><th>Zima: X–III</th></tr></thead><tbody><tr><td>I · przedpołudnie</td><td>7–13</td><td>7–13</td></tr><tr><td>II · popołudnie</td><td>19–22</td><td>16–21</td></tr><tr><td>III · tania</td><td>13–19 i 22–7</td><td>13–16 i 21–7</td></tr><tr><td>Soboty, niedziele, święta</td><td colspan="2">Cała doba w strefie III</td></tr></tbody></table>
+<div class="text-small">Opłaty stałe: sieciowa 9,08 / 13,36 zł + abonament wg cyklu + mocowa 5,28 / 12,68 / 21,13 / 29,58 zł miesięcznie (progi: &lt;500 / 500–1200 / &gt;1200–2800 / &gt;2800 kWh rocznie). Model dobiera próg do wpisanego zużycia; na fakturze decyduje zużycie historyczne. Opłata handlowa: 0 zł. Opłata przejściowa: 0 zł. Te same opłaty stałe w obu taryfach.</div>
+</details>
+</div>
+<style>
+#tauron-compare #tariff-plot{width:100%;display:block;touch-action:pan-y}
+#tauron-compare svg text{fill:var(--foreground);font-size:12px}
+#tauron-compare #result{margin:12px 0}
+#tauron-compare details{margin-top:14px}
+</style>
+<script>
+(()=>{
+const root=document.getElementById('tauron-compare'), svg=root.querySelector('svg');
+// Stawki brutto zł/kWh: energia + zmienna dystrybucja + jakościowa + OZE + kogeneracyjna.
+// Aktualizując taryfę, zmień także tabelę, opłaty stałe, opis dat i etykietę progu.
+const ns='http://www.w3.org/2000/svg', rates=[.9048,1.4961,.6257], g11=.9741;
+let shares=[20,20,60], coords;
+const get=id=>root.querySelector('#'+id), fmt=(v,n=2)=>v.toLocaleString('pl-PL',{minimumFractionDigits:n,maximumFractionDigits:n}), cash=v=>fmt(v)+' zł';
+function el(tag,attrs,txt){const e=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));if(txt!==undefined)e.textContent=txt;svg.appendChild(e);return e;}
+function draw(){
+const w=Math.max(240,root.clientWidth), left=64,right=w-24,top=30,bottom=Math.min(365,w*.65+80),h=bottom+60;
+svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.replaceChildren();
+const x=v=>left+(right-left)*v/100,y=v=>bottom-(bottom-top)*v/100;coords={x,y,left,right,top,bottom};
+const p=vs=>vs.map(([a,b])=>`${x(a)},${y(b)}`).join(' ');
+const b0=(g11-rates[2])/(rates[1]-rates[2])*100, a1=(rates[1]-g11)/(rates[1]-rates[0])*100,b1=100-a1;
+el('polygon',{points:p([[0,0],[100,0],[a1,b1],[0,b0]]),fill:'var(--viz-series-1)','fill-opacity':'.17'});
+el('polygon',{points:p([[0,b0],[a1,b1],[0,100]]),fill:'var(--viz-series-2)','fill-opacity':'.17'});
+for(let v=0;v<=100;v+=20){
+el('line',{x1:x(v),y1:y(0),x2:x(v),y2:y(100-v),stroke:'var(--border)'});
+el('line',{x1:x(0),y1:y(v),x2:x(100-v),y2:y(v),stroke:'var(--border)'});
+el('line',{x1:x(v),y1:y(0),x2:x(0),y2:y(v),stroke:'var(--border)'});
+if(w>=420||v%40===0||v===100){el('text',{x:x(v),y:bottom+20,'text-anchor':v===100?'end':'middle'},v+'%');el('text',{x:left-9,y:y(v)+4,'text-anchor':'end'},v+'%');}
+}
+el('polygon',{points:p([[0,0],[100,0],[0,100]]),fill:'none',stroke:'var(--border)'});
+el('line',{x1:x(0),y1:y(b0),x2:x(a1),y2:y(b1),stroke:'var(--foreground)','stroke-width':2});
+el('text',{x:x(8),y:y(68)},'G11 tańsza');
+el('text',{x:x(40),y:y(8),'text-anchor':'middle'},'G13 tańsza');
+el('text',{x:x(65),y:y(64),'text-anchor':'middle'},w<400?'III = 100 − I − II':'III = 100% − I − II');
+el('text',{x:x(0)+5,y:y(b0)-8},'Próg '+fmt(b0,2)+'%');
+el('text',{x:(left+right)/2,y:h-10,'text-anchor':'middle',class:'axis-title','data-axis':'x'},'Strefa I · przedpołudnie (%)');
+el('text',{transform:`translate(16 ${(top+bottom)/2}) rotate(-90)`,'text-anchor':'middle',class:'axis-title','data-axis':'y'},'Strefa II · popołudnie (%)');
+el('circle',{cx:x(shares[0]),cy:y(shares[1]),r:6,fill:'var(--foreground)',stroke:'var(--background)','stroke-width':2});
+}
+function update(){
+shares.forEach((s,i)=>{get('s'+i).value=s;get('v'+i).textContent=fmt(s,1)+'%';});
+const avg=shares.reduce((sum,s,i)=>sum+s*rates[i]/100,0),q=Math.max(1,Number(get('energy').value)||1);
+const moc=q<500?5.28:q<=1200?12.68:q<=2800?21.13:29.58;
+const fixed=Number(get('phase').value)+Number(get('cycle').value)+moc;
+const c11=q*g11+12*fixed,c13=q*avg+12*fixed,d=c11-c13;
+get('result').textContent=Math.abs(d)<.01?'G11 = G13 · ten sam koszt':`${d>0?'G13':'G11'} tańsza o ${cash(Math.abs(d))}/rok (${fmt(Math.abs(d)/c11*100,1)}% rachunku G11).`;
+get('bill11').textContent=cash(c11);get('bill13').textContent=cash(c13);get('month11').textContent=cash(c11/12);get('month13').textContent=cash(c13/12);get('fixed11').textContent=get('fixed13').textContent=cash(fixed);draw();
+}
+shares.forEach((_,i)=>get('s'+i).addEventListener('input',e=>{const v=Number(e.target.value),others=[0,1,2].filter(j=>j!==i),sum=shares[others[0]]+shares[others[1]];shares[others[0]]=sum?(100-v)*shares[others[0]]/sum:(100-v)/2;shares[others[1]]=100-v-shares[others[0]];shares[i]=v;update();}));
+['energy','phase','cycle'].forEach(id=>get(id).addEventListener('input',update));
+svg.addEventListener('click',e=>{const rect=svg.getBoundingClientRect(),c=coords,px=(e.clientX-rect.left)*svg.viewBox.baseVal.width/rect.width,py=(e.clientY-rect.top)*svg.viewBox.baseVal.height/rect.height,a=(px-c.left)/(c.right-c.left)*100,b=(c.bottom-py)/(c.bottom-c.top)*100;if(a>=0&&b>=0&&a+b<=100){shares=[a,b,100-a-b];update();}});
+new ResizeObserver(draw).observe(root);update();
+})();
+</script>
+<footer>
+<p>Niezależny kalkulator; nie jest oficjalną stroną TAURONA. Standardowa Taryfa Sprzedawcy TAURON Sprzedaż, bez dodatkowego pakietu i opłaty handlowej. Źródła sprawdzono 21.10.2026. Stawki są zapisane w kodzie i nie aktualizują się automatycznie.</p>
+<p>Kwota roczna to symulacja 12 miesięcy według stawek obowiązujących od lutego 2026, a nie odtworzenie faktur za cały rok kalendarzowy. Model porównuje zakup energii z sieci, bez rozliczeń prosumenckich, opustów, depozytu ani ulg indywidualnych.</p>
+<p>Źródła: <a href="https://www.tauron.pl/dla-domu/prad/taryfa-sprzedawcy">taryfa sprzedaży</a> · <a href="https://www.tauron-dystrybucja.pl/uslugi-dystrybucyjne/stawki-oplat-dystrybucyjnych">taryfa dystrybucyjna i stawki brutto</a> · <a href="https://media.tauron.pl/pr/862426/tansza-energia-dla-domu-tauron-z-nizszymi-cenami-pradu-w-2026-roku">komunikat o cenie G11 na 2026</a>.</p>
+<p>Dane nie opuszczają Twojej przeglądarki. Kalkulator nie korzysta z zewnętrznych bibliotek, ciasteczek ani analityki.</p>
+</footer>
+</main>
+</body>
+</html>
